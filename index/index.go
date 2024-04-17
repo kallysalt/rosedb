@@ -1,6 +1,8 @@
 package index
 
-import "github.com/rosedblabs/wal"
+import (
+	"github.com/rosedblabs/wal"
+)
 
 // Indexer is an interface for indexing key and position.
 // It is used to store the key and the position of the data in the WAL.
@@ -12,6 +14,8 @@ type Indexer interface {
 
 	// Get the position of the key in the index.
 	Get(key []byte) *wal.ChunkPosition
+
+	GetVector(key []byte, num uint32) ([]*wal.ChunkPosition, error)
 
 	// Delete the index of the key.
 	Delete(key []byte) (*wal.ChunkPosition, bool)
@@ -63,9 +67,6 @@ func NewIndexer() Indexer {
 		maxM := uint32(4)
 		interval := uint32(2)
 		return newVectorIndex(m, maxM, interval)
-	case BTree:
-		return newBTree()
-	//case Vector: return newVectorIndex(3, 5, 5)
 	default:
 		panic("unexpected index type")
 	}
