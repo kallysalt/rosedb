@@ -128,8 +128,8 @@ func TestNaiveThroughput_test(t *testing.T) {
 	printReport("naive_knn", originalFileItem, testFileItem, putTime, getTime)
 }
 
-var originalFileItem = uint32(10000)
-var testFileItem = uint32(10000)
+var originalFileItem = uint32(5000)
+var testFileItem = uint32(1000)
 
 func TestNaiveThroughput_test_10(t *testing.T) {
 	VectorSize := uint32(10)
@@ -288,21 +288,21 @@ func TestNaiveThroughput_test_500(t *testing.T) {
 	}
 	putTime := time.Since(now)
 
-	var wg sync.WaitGroup
-	now = time.Now()
+	//var wg sync.WaitGroup
+	//now = time.Now()
 	for i = 0; i < testFileItem; i++ {
-		wg.Add(1)
-		go func(key govector.Vector) {
-			defer wg.Done()
-			resultArr, err := nvi.GetVectorTest(key, resultSize)
-			if err != nil {
-				err := fmt.Errorf("get failed: %v", err.Error())
-				fmt.Println(err.Error())
-			}
-			fmt.Println(resultArr)
-		}(testArr[i])
+		//wg.Add(1)
+		//go func(key govector.Vector) {
+		//	defer wg.Done()
+		resultArr, err := nvi.GetVectorTest(testArr[i], resultSize)
+		if err != nil {
+			err := fmt.Errorf("get failed: %v", err.Error())
+			fmt.Println(err.Error())
+		}
+		fmt.Println(resultArr)
+		//}(testArr[i])
 	}
-	wg.Wait()
+	//wg.Wait()
 	getTime := time.Since(now)
 	printReport("naive_knn_500", originalFileItem, testFileItem, putTime, getTime)
 
@@ -333,21 +333,21 @@ func TestNaiveThroughput_test_1000(t *testing.T) {
 	}
 	putTime := time.Since(now)
 
-	var wg sync.WaitGroup
-	now = time.Now()
+	//var wg sync.WaitGroup
+	//now = time.Now()
 	for i = 0; i < testFileItem; i++ {
-		wg.Add(1)
-		go func(key govector.Vector) {
-			defer wg.Done()
-			resultArr, err := nvi.GetVectorTest(key, resultSize)
-			if err != nil {
-				err := fmt.Errorf("get failed: %v", err.Error())
-				fmt.Println(err.Error())
-			}
-			fmt.Println(resultArr)
-		}(testArr[i])
+		//wg.Add(1)
+		//go func(key govector.Vector) {
+		//	defer wg.Done()
+		resultArr, err := nvi.GetVectorTest(testArr[i], resultSize)
+		if err != nil {
+			err := fmt.Errorf("get failed: %v", err.Error())
+			fmt.Println(err.Error())
+		}
+		fmt.Println(resultArr)
+		//}(testArr[i])
 	}
-	wg.Wait()
+	//wg.Wait()
 	getTime := time.Since(now)
 	printReport("naive_knn_1000", originalFileItem, testFileItem, putTime, getTime)
 }

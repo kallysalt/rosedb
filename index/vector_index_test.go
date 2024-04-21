@@ -169,8 +169,8 @@ func TestThroughput_test_10(t *testing.T) {
 	maxM := uint32(50)
 	interval := uint32(100)
 	resultSize := uint32(30)
-	originalFileItem := uint32(10000)
-	testFileItem := uint32(10000)
+	originalFileItem := uint32(5000)
+	testFileItem := uint32(1000)
 
 	// initiate database
 	vi := newVectorIndex(m, maxM, interval)
@@ -209,17 +209,17 @@ func TestThroughput_test_10(t *testing.T) {
 	}
 	wg.Wait()
 	getTime := time.Since(now)
-	printReport("vector_index", originalFileItem, testFileItem, putTime, getTime)
+	printReport("vector_index_10", originalFileItem, testFileItem, putTime, getTime)
 }
 
 func TestThroughput_test_50(t *testing.T) {
 	VectorSize := uint32(50)
-	m := uint32(3)
-	maxM := uint32(5)
-	interval := uint32(5)
+	m := uint32(10)
+	maxM := uint32(15)
+	interval := uint32(100)
 	resultSize := uint32(30)
-	originalFileItem := uint32(10000)
-	testFileItem := uint32(10000)
+	originalFileItem := uint32(5000)
+	testFileItem := uint32(1000)
 
 	// initiate database
 	vi := newVectorIndex(m, maxM, interval)
@@ -258,7 +258,7 @@ func TestThroughput_test_50(t *testing.T) {
 	}
 	wg.Wait()
 	getTime := time.Since(now)
-	printReport("vector_index", originalFileItem, testFileItem, putTime, getTime)
+	printReport("vector_index_50", originalFileItem, testFileItem, putTime, getTime)
 }
 
 func TestThroughput_test_100(t *testing.T) {
@@ -267,8 +267,8 @@ func TestThroughput_test_100(t *testing.T) {
 	maxM := uint32(5)
 	interval := uint32(5)
 	resultSize := uint32(30)
-	originalFileItem := uint32(10000)
-	testFileItem := uint32(10000)
+	originalFileItem := uint32(5000)
+	testFileItem := uint32(1000)
 
 	// initiate database
 	vi := newVectorIndex(m, maxM, interval)
@@ -307,7 +307,7 @@ func TestThroughput_test_100(t *testing.T) {
 	}
 	wg.Wait()
 	getTime := time.Since(now)
-	printReport("vector_index", originalFileItem, testFileItem, putTime, getTime)
+	printReport("vector_index_100", originalFileItem, testFileItem, putTime, getTime)
 }
 
 func TestThroughput_test_500(t *testing.T) {
@@ -316,8 +316,8 @@ func TestThroughput_test_500(t *testing.T) {
 	maxM := uint32(5)
 	interval := uint32(5)
 	resultSize := uint32(30)
-	originalFileItem := uint32(10000)
-	testFileItem := uint32(10000)
+	originalFileItem := uint32(5000)
+	testFileItem := uint32(1000)
 
 	// initiate database
 	vi := newVectorIndex(m, maxM, interval)
@@ -356,17 +356,17 @@ func TestThroughput_test_500(t *testing.T) {
 	}
 	wg.Wait()
 	getTime := time.Since(now)
-	printReport("vector_index", originalFileItem, testFileItem, putTime, getTime)
+	printReport("vector_index_500", originalFileItem, testFileItem, putTime, getTime)
 }
 
 func TestThroughput_test_1000(t *testing.T) {
 	VectorSize := uint32(1000)
-	m := uint32(3)
-	maxM := uint32(5)
-	interval := uint32(5)
+	m := uint32(10)
+	maxM := uint32(15)
+	interval := uint32(100)
 	resultSize := uint32(30)
-	originalFileItem := uint32(10000)
-	testFileItem := uint32(100)
+	originalFileItem := uint32(5000)
+	testFileItem := uint32(1000)
 
 	// initiate database
 	vi := newVectorIndex(m, maxM, interval)
@@ -405,17 +405,17 @@ func TestThroughput_test_1000(t *testing.T) {
 	}
 	wg.Wait()
 	getTime := time.Since(now)
-	printReport("vector_index", originalFileItem, testFileItem, putTime, getTime)
+	printReport("vector_index_1000", originalFileItem, testFileItem, putTime, getTime)
 }
 
 func TestThroughput_Get_Only_1000(t *testing.T) {
 	VectorSize := uint32(1000)
-	m := uint32(3)
-	maxM := uint32(5)
+	m := uint32(100)
+	maxM := uint32(120)
 	interval := uint32(5)
 	resultSize := uint32(30)
-	originalFileItem := uint32(10000)
-	testFileItem := uint32(100)
+	originalFileItem := uint32(5000)
+	testFileItem := uint32(1000)
 
 	// initiate database
 	vi := newVectorIndex(m, maxM, interval)
