@@ -161,12 +161,12 @@ func TestNaiveThroughput_test_10(t *testing.T) {
 		wg.Add(1)
 		go func(key RoseVector) {
 			defer wg.Done()
-			resultArr, err := nvi.GetVectorTest(key, resultSize)
+			_, err := nvi.GetVectorTest(key, resultSize)
 			if err != nil {
 				err := fmt.Errorf("get failed: %v", err.Error())
 				fmt.Println(err.Error())
 			}
-			fmt.Println(resultArr)
+			//fmt.Println(resultArr)
 		}(testArr[i])
 	}
 	wg.Wait()
@@ -205,12 +205,12 @@ func TestNaiveThroughput_test_50(t *testing.T) {
 		wg.Add(1)
 		go func(key RoseVector) {
 			defer wg.Done()
-			resultArr, err := nvi.GetVectorTest(key, resultSize)
+			_, err := nvi.GetVectorTest(key, resultSize)
 			if err != nil {
 				err := fmt.Errorf("get failed: %v", err.Error())
 				fmt.Println(err.Error())
 			}
-			fmt.Println(resultArr)
+			//fmt.Println(resultArr)
 		}(testArr[i])
 	}
 	wg.Wait()
@@ -249,12 +249,12 @@ func TestNaiveThroughput_test_100(t *testing.T) {
 		wg.Add(1)
 		go func(key RoseVector) {
 			defer wg.Done()
-			resultArr, err := nvi.GetVectorTest(key, resultSize)
+			_, err := nvi.GetVectorTest(key, resultSize)
 			if err != nil {
 				err := fmt.Errorf("get failed: %v", err.Error())
 				fmt.Println(err.Error())
 			}
-			fmt.Println(resultArr)
+			//fmt.Println(resultArr)
 		}(testArr[i])
 	}
 	wg.Wait()
@@ -293,12 +293,12 @@ func TestNaiveThroughput_test_500(t *testing.T) {
 		//wg.Add(1)
 		//go func(key govector.Vector) {
 		//	defer wg.Done()
-		resultArr, err := nvi.GetVectorTest(testArr[i], resultSize)
+		_, err := nvi.GetVectorTest(testArr[i], resultSize)
 		if err != nil {
 			err := fmt.Errorf("get failed: %v", err.Error())
 			fmt.Println(err.Error())
 		}
-		fmt.Println(resultArr)
+		//fmt.Println(resultArr)
 		//}(testArr[i])
 	}
 	//wg.Wait()
@@ -338,15 +338,22 @@ func TestNaiveThroughput_test_1000(t *testing.T) {
 		//wg.Add(1)
 		//go func(key govector.Vector) {
 		//	defer wg.Done()
-		resultArr, err := nvi.GetVectorTest(testArr[i], resultSize)
+		_, err := nvi.GetVectorTest(testArr[i], resultSize)
 		if err != nil {
 			err := fmt.Errorf("get failed: %v", err.Error())
 			fmt.Println(err.Error())
 		}
-		fmt.Println(resultArr)
+		//fmt.Println(resultArr)
 		//}(testArr[i])
 	}
 	//wg.Wait()
 	getTime := time.Since(now)
 	printReport("naive_knn_1000", originalFileItem, testFileItem, putTime, getTime)
+}
+func TestExperiment1_Native(t *testing.T) {
+	TestNaiveThroughput_test_10(t)
+	TestNaiveThroughput_test_50(t)
+	TestNaiveThroughput_test_100(t)
+	TestNaiveThroughput_test_500(t)
+	TestNaiveThroughput_test_100(t)
 }

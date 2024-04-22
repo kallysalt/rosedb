@@ -3,6 +3,7 @@ package index
 import (
 	"bufio"
 	"fmt"
+	"github.com/viterin/vek"
 	"math"
 	"math/rand"
 	"os"
@@ -45,6 +46,7 @@ func TestVectorIndex_Put_Get(t *testing.T) {
 	for _, resVec := range resSet {
 		fmt.Println(resVec)
 	}
+	fmt.Println(vek.Info())
 }
 
 func TestVectorIndex_Simple_Put_Get(t *testing.T) {
@@ -162,15 +164,15 @@ func TestThroughput_test(t *testing.T) {
 	printReport("vector_index", originalFileItem, testFileItem, putTime, getTime)
 }
 
+var m = uint32(10)
+var maxM = uint32(15)
+var interval = uint32(100)
+var resultSize = uint32(30)
+var originalFileItemSize = uint32(5000)
+var testFileItemSize = uint32(1000)
+
 func TestThroughput_test_10(t *testing.T) {
 	VectorSize := uint32(10)
-	m := uint32(10)
-	maxM := uint32(15)
-	interval := uint32(100)
-	resultSize := uint32(30)
-	originalFileItem := uint32(5000)
-	testFileItem := uint32(1000)
-
 	// initiate database
 	vi := newVectorIndex(m, maxM, interval)
 	w, _ := wal.Open(wal.DefaultOptions)
@@ -182,19 +184,16 @@ func TestThroughput_test_10(t *testing.T) {
 	now := time.Now()
 	// put vector into db
 	var i uint32
-	for i = 0; i < originalFileItem; i++ {
+	for i = 0; i < originalFileItemSize; i++ {
 		key := EncodeVector(vecArr[i])
 		chunkPosition, _ := w.Write(key)
-		_, err := vi.putVector(vecArr[i], &ChunkPositionWrapper{pos: chunkPosition, deleted: false})
-		if err != nil {
-			t.Fatalf("put failed: %v", err.Error())
-		}
+		vi.Put(key, chunkPosition)
 	}
 	putTime := time.Since(now)
 
 	var wg sync.WaitGroup
 	now = time.Now()
-	for i = 0; i < testFileItem; i++ {
+	for i = 0; i < testFileItemSize; i++ {
 		wg.Add(1)
 		go func(key RoseVector) {
 			defer wg.Done()
@@ -208,17 +207,11 @@ func TestThroughput_test_10(t *testing.T) {
 	}
 	wg.Wait()
 	getTime := time.Since(now)
-	printReport("vector_index_10", originalFileItem, testFileItem, putTime, getTime)
+	printReport("vector_index_10", originalFileItemSize, testFileItemSize, putTime, getTime)
 }
 
 func TestThroughput_test_50(t *testing.T) {
 	VectorSize := uint32(50)
-	m := uint32(10)
-	maxM := uint32(15)
-	interval := uint32(100)
-	resultSize := uint32(30)
-	originalFileItem := uint32(5000)
-	testFileItem := uint32(1000)
 
 	// initiate database
 	vi := newVectorIndex(m, maxM, interval)
@@ -234,10 +227,7 @@ func TestThroughput_test_50(t *testing.T) {
 	for i = 0; i < originalFileItem; i++ {
 		key := EncodeVector(vecArr[i])
 		chunkPosition, _ := w.Write(key)
-		_, err := vi.putVector(vecArr[i], &ChunkPositionWrapper{pos: chunkPosition, deleted: false})
-		if err != nil {
-			t.Fatalf("put failed: %v", err.Error())
-		}
+		vi.Put(key, chunkPosition)
 	}
 	putTime := time.Since(now)
 
@@ -262,13 +252,6 @@ func TestThroughput_test_50(t *testing.T) {
 
 func TestThroughput_test_100(t *testing.T) {
 	VectorSize := uint32(100)
-	m := uint32(10)
-	maxM := uint32(15)
-	interval := uint32(100)
-	resultSize := uint32(30)
-	originalFileItem := uint32(5000)
-	testFileItem := uint32(1000)
-
 	// initiate database
 	vi := newVectorIndex(m, maxM, interval)
 	w, _ := wal.Open(wal.DefaultOptions)
@@ -283,10 +266,7 @@ func TestThroughput_test_100(t *testing.T) {
 	for i = 0; i < originalFileItem; i++ {
 		key := EncodeVector(vecArr[i])
 		chunkPosition, _ := w.Write(key)
-		_, err := vi.putVector(vecArr[i], &ChunkPositionWrapper{pos: chunkPosition, deleted: false})
-		if err != nil {
-			t.Fatalf("put failed: %v", err.Error())
-		}
+		vi.Put(key, chunkPosition)
 	}
 	putTime := time.Since(now)
 
@@ -311,13 +291,6 @@ func TestThroughput_test_100(t *testing.T) {
 
 func TestThroughput_test_500(t *testing.T) {
 	VectorSize := uint32(500)
-	m := uint32(10)
-	maxM := uint32(15)
-	interval := uint32(100)
-	resultSize := uint32(30)
-	originalFileItem := uint32(5000)
-	testFileItem := uint32(1000)
-
 	// initiate database
 	vi := newVectorIndex(m, maxM, interval)
 	w, _ := wal.Open(wal.DefaultOptions)
@@ -332,10 +305,7 @@ func TestThroughput_test_500(t *testing.T) {
 	for i = 0; i < originalFileItem; i++ {
 		key := EncodeVector(vecArr[i])
 		chunkPosition, _ := w.Write(key)
-		_, err := vi.putVector(vecArr[i], &ChunkPositionWrapper{pos: chunkPosition, deleted: false})
-		if err != nil {
-			t.Fatalf("put failed: %v", err.Error())
-		}
+		vi.Put(key, chunkPosition)
 	}
 	putTime := time.Since(now)
 
@@ -381,10 +351,7 @@ func TestThroughput_test_1000(t *testing.T) {
 	for i = 0; i < originalFileItem; i++ {
 		key := EncodeVector(vecArr[i])
 		chunkPosition, _ := w.Write(key)
-		_, err := vi.putVector(vecArr[i], &ChunkPositionWrapper{pos: chunkPosition, deleted: false})
-		if err != nil {
-			t.Fatalf("put failed: %v", err.Error())
-		}
+		vi.Put(key, chunkPosition)
 	}
 	putTime := time.Since(now)
 
@@ -565,11 +532,11 @@ func printReport(filename string, originalFileItem uint32, testFileItem uint32, 
 
 	fmt.Println("\n---------------------------------Here is the report ----------------------------")
 	fmt.Println("time to put all", originalFileItem, "items is ", putTime.Seconds(), "s")
-	get_throughput := float64(originalFileItem) / putTime.Seconds()
-	fmt.Println("throughput is ", get_throughput, "qps")
-	fmt.Println("time to get result for all", testFileItem, "items is ", getTime.Seconds(), "s")
-	put_throughput := float64(testFileItem) / getTime.Seconds()
+	put_throughput := float64(originalFileItem) / putTime.Seconds()
 	fmt.Println("throughput is ", put_throughput, "qps")
+	fmt.Println("time to get result for all", testFileItem, "items is ", getTime.Seconds(), "s")
+	get_throughput := float64(testFileItem) / getTime.Seconds()
+	fmt.Println("throughput is ", get_throughput, "qps")
 
 	resultsFolder := "../test_files/resultsData/"
 	resultsFilePath := resultsFolder + filename
@@ -579,8 +546,152 @@ func printReport(filename string, originalFileItem uint32, testFileItem uint32, 
 		return
 	}
 	defer file.Close()
-	_, err = file.WriteString(fmt.Sprintf("%v %v %v %v", putTime.Seconds(), get_throughput, getTime.Seconds(), put_throughput))
+	_, err = file.WriteString(fmt.Sprintf("%v %v %v %v", putTime.Seconds(), put_throughput, getTime.Seconds(), get_throughput))
 	if err != nil {
 		fmt.Println("Error writing to file:", err)
 	}
+}
+
+func TestExperiment1(t *testing.T) {
+	TestThroughput_test_10(t)
+	TestThroughput_test_50(t)
+	TestThroughput_test_100(t)
+	TestThroughput_test_500(t)
+	TestThroughput_test_100(t)
+}
+
+func TestExperiment2_m(t *testing.T) {
+	configArrM := [...]uint32{3, 10, 50, 100, 200}
+	configArrMaxM := [...]uint32{5, 15, 75, 120, 250}
+	VectorSize := uint32(100)
+	for i := 0; i < len(configArrM); i++ {
+		m = configArrM[i]
+		maxM = configArrMaxM[i]
+		// initiate database
+		vi := newVectorIndex(m, maxM, interval)
+		w, _ := wal.Open(wal.DefaultOptions)
+
+		// load data from txt file
+		vecArr := loadVectorFromTxt("../test_files/vectors_100.txt", VectorSize)
+		testArr := loadVectorFromTxt("../test_files/testData/vectors_100.txt", VectorSize)
+
+		now := time.Now()
+		// put vector into db
+		var i uint32
+		for i = 0; i < originalFileItem; i++ {
+			key := EncodeVector(vecArr[i])
+			chunkPosition, _ := w.Write(key)
+			vi.Put(key, chunkPosition)
+		}
+		putTime := time.Since(now)
+
+		var wg sync.WaitGroup
+		now = time.Now()
+		for i = 0; i < testFileItem; i++ {
+			wg.Add(1)
+			go func(key RoseVector) {
+				defer wg.Done()
+				_, err := vi.GetVectorTest(key, resultSize)
+				if err != nil {
+					err := fmt.Errorf("get failed: %v", err.Error())
+					fmt.Println(err.Error())
+				}
+				//fmt.Println(resultArr)
+			}(testArr[i])
+		}
+		wg.Wait()
+		getTime := time.Since(now)
+		fmt.Println("m: ", m, "maxM: ", maxM, "put throughPut: ", float64(originalFileItem)/putTime.Seconds(), "get throughput: ", float64(testFileItem)/getTime.Seconds())
+	}
+	m = 10
+	maxM = 15
+}
+
+func TestExperiment2_maxM(t *testing.T) {
+	configArrMaxM := [...]uint32{15, 20, 30, 40, 50}
+	VectorSize := uint32(100)
+	for i := 0; i < len(configArrMaxM); i++ {
+		maxM = configArrMaxM[i]
+		// initiate database
+		vi := newVectorIndex(m, maxM, interval)
+		w, _ := wal.Open(wal.DefaultOptions)
+
+		// load data from txt file
+		vecArr := loadVectorFromTxt("../test_files/vectors_100.txt", VectorSize)
+		testArr := loadVectorFromTxt("../test_files/testData/vectors_100.txt", VectorSize)
+
+		now := time.Now()
+		// put vector into db
+		var i uint32
+		for i = 0; i < originalFileItem; i++ {
+			key := EncodeVector(vecArr[i])
+			chunkPosition, _ := w.Write(key)
+			vi.Put(key, chunkPosition)
+		}
+		putTime := time.Since(now)
+
+		var wg sync.WaitGroup
+		now = time.Now()
+		for i = 0; i < testFileItem; i++ {
+			wg.Add(1)
+			go func(key RoseVector) {
+				defer wg.Done()
+				_, err := vi.GetVectorTest(key, resultSize)
+				if err != nil {
+					err := fmt.Errorf("get failed: %v", err.Error())
+					fmt.Println(err.Error())
+				}
+				//fmt.Println(resultArr)
+			}(testArr[i])
+		}
+		wg.Wait()
+		getTime := time.Since(now)
+		fmt.Println("m: ", m, "maxM: ", maxM, "put throughPut: ", float64(originalFileItem)/putTime.Seconds(), "get throughput: ", float64(testFileItem)/getTime.Seconds())
+	}
+	m = 10
+	maxM = 15
+}
+
+func TestExperiment2_entry_node(t *testing.T) {
+	configArrEntry := [...]uint32{1000, 200, 100, 50, 10}
+	VectorSize := uint32(100)
+	for i := 0; i < len(configArrEntry); i++ {
+		interval = configArrEntry[i]
+		// initiate database
+		vi := newVectorIndex(m, maxM, interval)
+		w, _ := wal.Open(wal.DefaultOptions)
+
+		// load data from txt file
+		vecArr := loadVectorFromTxt("../test_files/vectors_100.txt", VectorSize)
+		testArr := loadVectorFromTxt("../test_files/testData/vectors_100.txt", VectorSize)
+
+		now := time.Now()
+		// put vector into db
+		var i uint32
+		for i = 0; i < originalFileItem; i++ {
+			key := EncodeVector(vecArr[i])
+			chunkPosition, _ := w.Write(key)
+			vi.Put(key, chunkPosition)
+		}
+		putTime := time.Since(now)
+
+		var wg sync.WaitGroup
+		now = time.Now()
+		for i = 0; i < testFileItem; i++ {
+			wg.Add(1)
+			go func(key RoseVector) {
+				defer wg.Done()
+				_, err := vi.GetVectorTest(key, resultSize)
+				if err != nil {
+					err := fmt.Errorf("get failed: %v", err.Error())
+					fmt.Println(err.Error())
+				}
+				//fmt.Println(resultArr)
+			}(testArr[i])
+		}
+		wg.Wait()
+		getTime := time.Since(now)
+		fmt.Println("m: ", m, "maxM: ", maxM, "put throughPut: ", float64(originalFileItem)/putTime.Seconds(), "get throughput: ", float64(testFileItem)/getTime.Seconds())
+	}
+	interval = 100
 }
