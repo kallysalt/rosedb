@@ -406,14 +406,15 @@ func TestThroughput_test_1000(t *testing.T) {
 	printReport("vector_index", originalFileItem, testFileItem, putTime, getTime)
 }
 
-func TestThroughput_Get_Only_1000(t *testing.T) {
+func TestThroughput_Get_With_Delete_Naive_1000(t *testing.T) {
 	VectorSize := uint32(1000)
-	m := uint32(3)
-	maxM := uint32(5)
-	interval := uint32(5)
+	m := uint32(5)
+	maxM := uint32(10)
+	interval := uint32(100)
 	resultSize := uint32(30)
 	originalFileItem := uint32(10000)
-	testFileItem := uint32(100)
+	testFileItem := uint32(5000)
+	deleteFactor := 0.3
 
 	// initiate database
 	vi := newVectorIndex(m, maxM, interval)
@@ -423,16 +424,26 @@ func TestThroughput_Get_Only_1000(t *testing.T) {
 	vecArr := loadVectorFromTxt("../test_files/vectors_1000.txt", VectorSize)
 	testArr := loadVectorFromTxt("../test_files/testData/vectors_1000.txt", VectorSize)
 
+	// construct delete vec
+	deleteArr := make([][]byte, 0)
+	source := rand.NewSource(time.Now().UnixNano())
+	rng := rand.New(source)
+
+	{
+		selectedNum := int(math.Ceil(float64(len(vecArr)) * deleteFactor))
+		for selectedNum > 0 {
+			deleteArr = append(deleteArr, EncodeVector(vecArr[rng.Intn(len(vecArr))]))
+			selectedNum -= 1
+		}
+	}
+
 	now := time.Now()
 	// put vector into db
 	var i uint32
 	for i = 0; i < originalFileItem; i++ {
 		key := EncodeVector(vecArr[i])
 		chunkPosition, _ := w.Write(key)
-		_, err := vi.putVector(vecArr[i], &ChunkPositionWrapper{pos: chunkPosition, deleted: false})
-		if err != nil {
-			t.Fatalf("put failed: %v", err.Error())
-		}
+		vi.Put(key, chunkPosition)
 	}
 	putTime := time.Since(now)
 
@@ -449,6 +460,14 @@ func TestThroughput_Get_Only_1000(t *testing.T) {
 			}
 		}(testArr[i])
 	}
+	for _, key := range deleteArr {
+		wg.Add(1)
+		go func(key []byte) {
+			defer wg.Done()
+			vi.DeleteNaive(key)
+		}(key)
+	}
+
 	wg.Wait()
 	getTime := time.Since(now)
 	printReport("vector_index", originalFileItem, testFileItem, putTime, getTime)
@@ -456,12 +475,13 @@ func TestThroughput_Get_Only_1000(t *testing.T) {
 
 func TestThroughput_Get_With_Delete_1000(t *testing.T) {
 	VectorSize := uint32(1000)
-	m := uint32(3)
-	maxM := uint32(5)
-	interval := uint32(5)
+	m := uint32(5)
+	maxM := uint32(10)
+	interval := uint32(100)
 	resultSize := uint32(30)
 	originalFileItem := uint32(10000)
-	testFileItem := uint32(100)
+	testFileItem := uint32(5000)
+	deleteFactor := 0.3
 
 	// initiate database
 	vi := newVectorIndex(m, maxM, interval)
@@ -477,7 +497,7 @@ func TestThroughput_Get_With_Delete_1000(t *testing.T) {
 	rng := rand.New(source)
 
 	{
-		selectedNum := int(math.Ceil(float64(len(vecArr)) * 0.3))
+		selectedNum := int(math.Ceil(float64(len(vecArr)) * deleteFactor))
 		for selectedNum > 0 {
 			deleteArr = append(deleteArr, EncodeVector(vecArr[rng.Intn(len(vecArr))]))
 			selectedNum -= 1
@@ -490,10 +510,7 @@ func TestThroughput_Get_With_Delete_1000(t *testing.T) {
 	for i = 0; i < originalFileItem; i++ {
 		key := EncodeVector(vecArr[i])
 		chunkPosition, _ := w.Write(key)
-		_, err := vi.putVector(vecArr[i], &ChunkPositionWrapper{pos: chunkPosition, deleted: false})
-		if err != nil {
-			t.Fatalf("put failed: %v", err.Error())
-		}
+		vi.Put(key, chunkPosition)
 	}
 	putTime := time.Since(now)
 
@@ -503,12 +520,11 @@ func TestThroughput_Get_With_Delete_1000(t *testing.T) {
 		wg.Add(1)
 		go func(key RoseVector) {
 			defer wg.Done()
-			resultArr, err := vi.GetVectorTest(key, resultSize)
+			_, err := vi.GetVectorTest(key, resultSize)
 			if err != nil {
 				err := fmt.Errorf("get failed: %v", err.Error())
 				fmt.Println(err.Error())
 			}
-			fmt.Println(resultArr)
 		}(testArr[i])
 	}
 	for _, key := range deleteArr {
