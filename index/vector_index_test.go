@@ -165,8 +165,8 @@ func TestThroughput_test(t *testing.T) {
 
 func TestThroughput_test_10(t *testing.T) {
 	VectorSize := uint32(10)
-	m := uint32(30)
-	maxM := uint32(50)
+	m := uint32(10)
+	maxM := uint32(15)
 	interval := uint32(100)
 	resultSize := uint32(30)
 	originalFileItem := uint32(5000)
@@ -199,12 +199,12 @@ func TestThroughput_test_10(t *testing.T) {
 		wg.Add(1)
 		go func(key govector.Vector) {
 			defer wg.Done()
-			resultArr, err := vi.GetVectorTest(key, resultSize)
+			_, err := vi.GetVectorTest(key, resultSize)
 			if err != nil {
 				err := fmt.Errorf("get failed: %v", err.Error())
 				fmt.Println(err.Error())
 			}
-			fmt.Println(resultArr)
+			//fmt.Println(resultArr)
 		}(testArr[i])
 	}
 	wg.Wait()
@@ -248,12 +248,12 @@ func TestThroughput_test_50(t *testing.T) {
 		wg.Add(1)
 		go func(key govector.Vector) {
 			defer wg.Done()
-			resultArr, err := vi.GetVectorTest(key, resultSize)
+			_, err := vi.GetVectorTest(key, resultSize)
 			if err != nil {
 				err := fmt.Errorf("get failed: %v", err.Error())
 				fmt.Println(err.Error())
 			}
-			fmt.Println(resultArr)
+			//fmt.Println(resultArr)
 		}(testArr[i])
 	}
 	wg.Wait()
@@ -263,9 +263,9 @@ func TestThroughput_test_50(t *testing.T) {
 
 func TestThroughput_test_100(t *testing.T) {
 	VectorSize := uint32(100)
-	m := uint32(3)
-	maxM := uint32(5)
-	interval := uint32(5)
+	m := uint32(10)
+	maxM := uint32(15)
+	interval := uint32(100)
 	resultSize := uint32(30)
 	originalFileItem := uint32(5000)
 	testFileItem := uint32(1000)
@@ -297,12 +297,12 @@ func TestThroughput_test_100(t *testing.T) {
 		wg.Add(1)
 		go func(key govector.Vector) {
 			defer wg.Done()
-			resultArr, err := vi.GetVectorTest(key, resultSize)
+			_, err := vi.GetVectorTest(key, resultSize)
 			if err != nil {
 				err := fmt.Errorf("get failed: %v", err.Error())
 				fmt.Println(err.Error())
 			}
-			fmt.Println(resultArr)
+			//fmt.Println(resultArr)
 		}(testArr[i])
 	}
 	wg.Wait()
@@ -312,9 +312,9 @@ func TestThroughput_test_100(t *testing.T) {
 
 func TestThroughput_test_500(t *testing.T) {
 	VectorSize := uint32(500)
-	m := uint32(3)
-	maxM := uint32(5)
-	interval := uint32(5)
+	m := uint32(10)
+	maxM := uint32(15)
+	interval := uint32(100)
 	resultSize := uint32(30)
 	originalFileItem := uint32(5000)
 	testFileItem := uint32(1000)
@@ -346,12 +346,12 @@ func TestThroughput_test_500(t *testing.T) {
 		wg.Add(1)
 		go func(key govector.Vector) {
 			defer wg.Done()
-			resultArr, err := vi.GetVectorTest(key, resultSize)
+			_, err := vi.GetVectorTest(key, resultSize)
 			if err != nil {
 				err := fmt.Errorf("get failed: %v", err.Error())
 				fmt.Println(err.Error())
 			}
-			fmt.Println(resultArr)
+			//fmt.Println(resultArr)
 		}(testArr[i])
 	}
 	wg.Wait()
@@ -395,12 +395,12 @@ func TestThroughput_test_1000(t *testing.T) {
 		wg.Add(1)
 		go func(key govector.Vector) {
 			defer wg.Done()
-			resultArr, err := vi.GetVectorTest(key, resultSize)
+			_, err := vi.GetVectorTest(key, resultSize)
 			if err != nil {
 				err := fmt.Errorf("get failed: %v", err.Error())
 				fmt.Println(err.Error())
 			}
-			fmt.Println(resultArr)
+			//fmt.Println(resultArr)
 		}(testArr[i])
 	}
 	wg.Wait()
