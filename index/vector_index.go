@@ -15,7 +15,7 @@ var (
 )
 
 var (
-	kReconstructPercent = 0.1
+	kReconstructPercent = 0.05
 )
 
 type vectorItem struct {
@@ -137,6 +137,10 @@ func (vi *VectorIndex) reconstructGraph() {
 
 	defer vi.mu.Unlock()
 
+	if float64(vi.toDelete.Load()) <= float64(len(vi.graphNodeMap))*kReconstructPercent {
+		return
+	}
+
 	newEntryNode := []uint32{}
 
 	for _, node := range vi.entryNode {
@@ -166,7 +170,6 @@ func (vi *VectorIndex) reconstructGraph() {
 	}
 
 	vi.toDelete.Store(0)
-
 }
 
 func (vi *VectorIndex) addEdge(inNode uint32, outNode uint32) {
@@ -326,13 +329,62 @@ func (vi *VectorIndex) Delete(key []byte) (*wal.ChunkPosition, bool) {
 		return nil, res
 	}
 
+	vi.mu.RLock()
 	wrapper.deleted = true
+	vi.mu.RUnlock()
 
 	vi.toDelete.Add(1)
 
-	if float64(vi.toDelete.Load()) > float64(len(vi.graphNodeMap)) * kReconstructPercent {
-		vi.reconstructGraph()
+	vi.reconstructGraph()
+	return wrapper.pos, res
+}
+
+func equal(a, b RoseVector) bool {
+	if len(a) != len(b) {
+		return false
 	}
+	for i, v := range a {
+		if v != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func (vi *VectorIndex) DeleteNaive(key []byte) (*wal.ChunkPosition, bool) {
+	wrapper, res := vi.btreeIndex.Delete(key)
+	if wrapper == nil {
+		return nil, res
+	}
+
+	vi.mu.Lock()
+	defer vi.mu.Unlock()
+
+	newEntryNode := []uint32{}
+
+	vec := DecodeVector(key)
+
+	for _, node := range vi.entryNode {
+		if !equal(vec, vi.graphNodeMap[node].item.key) {
+			newEntryNode = append(newEntryNode, node)
+		}
+	}
+
+	vi.entryNode = newEntryNode
+
+	for node, neighbor := range vi.graph {
+		if equal(vec, vi.graphNodeMap[node].item.key) {
+			for n := range neighbor {
+				vi.deleteEdge(node, n)
+			}
+
+			delete(vi.graph, node)
+			delete(vi.graphNodeMap, node)
+
+			break
+		}
+	}
+
 	return wrapper.pos, res
 }
 
