@@ -261,7 +261,7 @@ func TestThroughput_test_100(t *testing.T) {
 	now := time.Now()
 	// put vector into db
 	var i uint32
-	for i = 0; i < originalFileItem; i++ {
+	for i = 0; i < originalFileItemSize; i++ {
 		key := EncodeVector(vecArr[i])
 		chunkPosition, _ := w.Write(key)
 		vi.Put(key, chunkPosition)
@@ -270,7 +270,7 @@ func TestThroughput_test_100(t *testing.T) {
 
 	var wg sync.WaitGroup
 	now = time.Now()
-	for i = 0; i < testFileItem; i++ {
+	for i = 0; i < testFileItemSize; i++ {
 		wg.Add(1)
 		go func(key RoseVector) {
 			defer wg.Done()
@@ -300,7 +300,7 @@ func TestThroughput_test_500(t *testing.T) {
 	now := time.Now()
 	// put vector into db
 	var i uint32
-	for i = 0; i < originalFileItem; i++ {
+	for i = 0; i < originalFileItemSize; i++ {
 		key := EncodeVector(vecArr[i])
 		chunkPosition, _ := w.Write(key)
 		vi.Put(key, chunkPosition)
@@ -309,7 +309,7 @@ func TestThroughput_test_500(t *testing.T) {
 
 	var wg sync.WaitGroup
 	now = time.Now()
-	for i = 0; i < testFileItem; i++ {
+	for i = 0; i < testFileItemSize; i++ {
 		wg.Add(1)
 		go func(key RoseVector) {
 			defer wg.Done()
@@ -340,7 +340,7 @@ func TestThroughput_test_1000(t *testing.T) {
 	now := time.Now()
 	// put vector into db
 	var i uint32
-	for i = 0; i < originalFileItem; i++ {
+	for i = 0; i < originalFileItemSize; i++ {
 		key := EncodeVector(vecArr[i])
 		chunkPosition, _ := w.Write(key)
 		vi.Put(key, chunkPosition)
@@ -349,7 +349,7 @@ func TestThroughput_test_1000(t *testing.T) {
 
 	var wg sync.WaitGroup
 	now = time.Now()
-	for i = 0; i < testFileItem; i++ {
+	for i = 0; i < testFileItemSize; i++ {
 		wg.Add(1)
 		go func(key RoseVector) {
 			defer wg.Done()
@@ -365,11 +365,67 @@ func TestThroughput_test_1000(t *testing.T) {
 	getTime := time.Since(now)
 	printReport("vector_index_1000", originalFileItem, testFileItem, putTime, getTime)
 }
+func TestThroughput_Get_With_Delete_Naive_10(t *testing.T) {
+	VectorSize := uint32(10)
+	deleteFactor := 0.3
+
+	// initiate database
+	vi := newVectorIndex(m, maxM, interval)
+	w, _ := wal.Open(wal.DefaultOptions)
+
+	// load data from txt file
+	vecArr := loadVectorFromTxt("../test_files/vectors_10.txt", VectorSize)
+	testArr := loadVectorFromTxt("../test_files/testData/vectors_10.txt", VectorSize)
+
+	GetAndDeleteOperationNaive(vecArr, testArr, deleteFactor, VectorSize, w, vi)
+}
+func TestThroughput_Get_With_Delete_Naive_50(t *testing.T) {
+	VectorSize := uint32(50)
+	deleteFactor := 0.3
+
+	// initiate database
+	vi := newVectorIndex(m, maxM, interval)
+	w, _ := wal.Open(wal.DefaultOptions)
+
+	// load data from txt file
+	vecArr := loadVectorFromTxt("../test_files/vectors_50.txt", VectorSize)
+	testArr := loadVectorFromTxt("../test_files/testData/vectors_50.txt", VectorSize)
+
+	GetAndDeleteOperationNaive(vecArr, testArr, deleteFactor, VectorSize, w, vi)
+}
+
+func TestThroughput_Get_With_Delete_Naive_100(t *testing.T) {
+	VectorSize := uint32(100)
+	deleteFactor := 0.3
+
+	// initiate database
+	vi := newVectorIndex(m, maxM, interval)
+	w, _ := wal.Open(wal.DefaultOptions)
+
+	// load data from txt file
+	vecArr := loadVectorFromTxt("../test_files/vectors_100.txt", VectorSize)
+	testArr := loadVectorFromTxt("../test_files/testData/vectors_100.txt", VectorSize)
+
+	GetAndDeleteOperationNaive(vecArr, testArr, deleteFactor, VectorSize, w, vi)
+}
+
+func TestThroughput_Get_With_Delete_Naive_500(t *testing.T) {
+	VectorSize := uint32(500)
+	deleteFactor := 0.3
+
+	// initiate database
+	vi := newVectorIndex(m, maxM, interval)
+	w, _ := wal.Open(wal.DefaultOptions)
+
+	// load data from txt file
+	vecArr := loadVectorFromTxt("../test_files/vectors_500.txt", VectorSize)
+	testArr := loadVectorFromTxt("../test_files/testData/vectors_500.txt", VectorSize)
+
+	GetAndDeleteOperationNaive(vecArr, testArr, deleteFactor, VectorSize, w, vi)
+}
 
 func TestThroughput_Get_With_Delete_Naive_1000(t *testing.T) {
 	VectorSize := uint32(1000)
-	originalFileItem := uint32(10000)
-	testFileItem := uint32(5000)
 	deleteFactor := 0.3
 
 	// initiate database
@@ -380,6 +436,10 @@ func TestThroughput_Get_With_Delete_Naive_1000(t *testing.T) {
 	vecArr := loadVectorFromTxt("../test_files/vectors_1000.txt", VectorSize)
 	testArr := loadVectorFromTxt("../test_files/testData/vectors_1000.txt", VectorSize)
 
+	GetAndDeleteOperationNaive(vecArr, testArr, deleteFactor, VectorSize, w, vi)
+}
+
+func GetAndDeleteOperationNaive(vecArr []RoseVector, testArr []RoseVector, deleteFactor float64, dimension uint32, w *wal.WAL, vi *VectorIndex) {
 	// construct delete vec
 	deleteArr := make([][]byte, 0)
 	source := rand.NewSource(time.Now().UnixNano())
@@ -405,7 +465,7 @@ func TestThroughput_Get_With_Delete_Naive_1000(t *testing.T) {
 
 	var wg sync.WaitGroup
 	now = time.Now()
-	for i = 0; i < testFileItem; i++ {
+	for i = 0; i < testFileItemSize; i++ {
 		wg.Add(1)
 		go func(key RoseVector) {
 			defer wg.Done()
@@ -426,13 +486,70 @@ func TestThroughput_Get_With_Delete_Naive_1000(t *testing.T) {
 
 	wg.Wait()
 	getTime := time.Since(now)
-	printReport("vector_index", originalFileItem, testFileItem, putTime, getTime)
+	fmt.Println("Vector   dimension: ", dimension, " put throughput: ", float64(originalFileItem)/putTime.Seconds(), " get throughput: ", float64(testFileItemSize)/getTime.Seconds())
+}
+func TestThroughput_Get_With_Delete_10(t *testing.T) {
+	VectorSize := uint32(10)
+	deleteFactor := 0.3
+
+	// initiate database
+	vi := newVectorIndex(m, maxM, interval)
+	w, _ := wal.Open(wal.DefaultOptions)
+
+	// load data from txt file
+	vecArr := loadVectorFromTxt("../test_files/vectors_10.txt", VectorSize)
+	testArr := loadVectorFromTxt("../test_files/testData/vectors_10.txt", VectorSize)
+
+	GetAndDeleteOperation(vecArr, testArr, deleteFactor, VectorSize, w, vi)
+}
+
+func TestThroughput_Get_With_Delete_50(t *testing.T) {
+	VectorSize := uint32(50)
+	deleteFactor := 0.3
+
+	// initiate database
+	vi := newVectorIndex(m, maxM, interval)
+	w, _ := wal.Open(wal.DefaultOptions)
+
+	// load data from txt file
+	vecArr := loadVectorFromTxt("../test_files/vectors_50.txt", VectorSize)
+	testArr := loadVectorFromTxt("../test_files/testData/vectors_50.txt", VectorSize)
+
+	GetAndDeleteOperation(vecArr, testArr, deleteFactor, VectorSize, w, vi)
+}
+
+func TestThroughput_Get_With_Delete_100(t *testing.T) {
+	VectorSize := uint32(100)
+	deleteFactor := 0.3
+
+	// initiate database
+	vi := newVectorIndex(m, maxM, interval)
+	w, _ := wal.Open(wal.DefaultOptions)
+
+	// load data from txt file
+	vecArr := loadVectorFromTxt("../test_files/vectors_100.txt", VectorSize)
+	testArr := loadVectorFromTxt("../test_files/testData/vectors_100.txt", VectorSize)
+
+	GetAndDeleteOperation(vecArr, testArr, deleteFactor, VectorSize, w, vi)
+}
+
+func TestThroughput_Get_With_Delete_500(t *testing.T) {
+	VectorSize := uint32(500)
+	deleteFactor := 0.3
+
+	// initiate database
+	vi := newVectorIndex(m, maxM, interval)
+	w, _ := wal.Open(wal.DefaultOptions)
+
+	// load data from txt file
+	vecArr := loadVectorFromTxt("../test_files/vectors_500.txt", VectorSize)
+	testArr := loadVectorFromTxt("../test_files/testData/vectors_500.txt", VectorSize)
+
+	GetAndDeleteOperation(vecArr, testArr, deleteFactor, VectorSize, w, vi)
 }
 
 func TestThroughput_Get_With_Delete_1000(t *testing.T) {
 	VectorSize := uint32(1000)
-	originalFileItem := uint32(10000)
-	testFileItem := uint32(5000)
 	deleteFactor := 0.3
 
 	// initiate database
@@ -443,6 +560,10 @@ func TestThroughput_Get_With_Delete_1000(t *testing.T) {
 	vecArr := loadVectorFromTxt("../test_files/vectors_1000.txt", VectorSize)
 	testArr := loadVectorFromTxt("../test_files/testData/vectors_1000.txt", VectorSize)
 
+	GetAndDeleteOperation(vecArr, testArr, deleteFactor, VectorSize, w, vi)
+}
+
+func GetAndDeleteOperation(vecArr []RoseVector, testArr []RoseVector, deleteFactor float64, dimension uint32, w *wal.WAL, vi *VectorIndex) {
 	// construct delete vec
 	deleteArr := make([][]byte, 0)
 	source := rand.NewSource(time.Now().UnixNano())
@@ -459,7 +580,7 @@ func TestThroughput_Get_With_Delete_1000(t *testing.T) {
 	now := time.Now()
 	// put vector into db
 	var i uint32
-	for i = 0; i < originalFileItem; i++ {
+	for i = 0; i < originalFileItemSize; i++ {
 		key := EncodeVector(vecArr[i])
 		chunkPosition, _ := w.Write(key)
 		vi.Put(key, chunkPosition)
@@ -468,7 +589,7 @@ func TestThroughput_Get_With_Delete_1000(t *testing.T) {
 
 	var wg sync.WaitGroup
 	now = time.Now()
-	for i = 0; i < testFileItem; i++ {
+	for i = 0; i < testFileItemSize; i++ {
 		wg.Add(1)
 		go func(key RoseVector) {
 			defer wg.Done()
@@ -489,7 +610,7 @@ func TestThroughput_Get_With_Delete_1000(t *testing.T) {
 
 	wg.Wait()
 	getTime := time.Since(now)
-	printReport("vector_index", originalFileItem, testFileItem, putTime, getTime)
+	fmt.Println("Vector   dimension: ", dimension, " put throughput: ", float64(originalFileItem)/putTime.Seconds(), " get throughput: ", float64(testFileItemSize)/getTime.Seconds())
 }
 
 func loadVectorFromTxt(fileName string, VectorSize uint32) []RoseVector {
@@ -528,14 +649,14 @@ func loadVectorFromTxt(fileName string, VectorSize uint32) []RoseVector {
 	return vecArr
 }
 
-func printReport(filename string, originalFileItem uint32, testFileItem uint32, putTime time.Duration, getTime time.Duration) {
+func printReport(filename string, originalFileItemSize uint32, testFileItemSize uint32, putTime time.Duration, getTime time.Duration) {
 
 	fmt.Println("\n---------------------------------Here is the report ----------------------------")
-	fmt.Println("time to put all", originalFileItem, "items is ", putTime.Seconds(), "s")
+	fmt.Println("time to put all", originalFileItemSize, "items is ", putTime.Seconds(), "s")
 	put_throughput := float64(originalFileItem) / putTime.Seconds()
 	fmt.Println("throughput is ", put_throughput, "qps")
-	fmt.Println("time to get result for all", testFileItem, "items is ", getTime.Seconds(), "s")
-	get_throughput := float64(testFileItem) / getTime.Seconds()
+	fmt.Println("time to get result for all", testFileItemSize, "items is ", getTime.Seconds(), "s")
+	get_throughput := float64(testFileItemSize) / getTime.Seconds()
 	fmt.Println("throughput is ", get_throughput, "qps")
 
 	resultsFolder := "../test_files/resultsData/"
@@ -557,7 +678,7 @@ func TestExperiment1(t *testing.T) {
 	TestThroughput_test_50(t)
 	TestThroughput_test_100(t)
 	TestThroughput_test_500(t)
-	TestThroughput_test_100(t)
+	TestThroughput_test_1000(t)
 }
 
 func TestExperiment2_m(t *testing.T) {
@@ -587,7 +708,7 @@ func TestExperiment2_m(t *testing.T) {
 
 		var wg sync.WaitGroup
 		now = time.Now()
-		for i = 0; i < testFileItem; i++ {
+		for i = 0; i < testFileItemSize; i++ {
 			wg.Add(1)
 			go func(key RoseVector) {
 				defer wg.Done()
@@ -601,7 +722,7 @@ func TestExperiment2_m(t *testing.T) {
 		}
 		wg.Wait()
 		getTime := time.Since(now)
-		fmt.Println("m: ", m, "maxM: ", maxM, "put throughPut: ", float64(originalFileItem)/putTime.Seconds(), "get throughput: ", float64(testFileItem)/getTime.Seconds())
+		fmt.Println("m: ", m, "maxM: ", maxM, "put throughPut: ", float64(originalFileItem)/putTime.Seconds(), "get throughput: ", float64(testFileItemSize)/getTime.Seconds())
 	}
 	m = 10
 	maxM = 15
@@ -632,7 +753,7 @@ func TestExperiment2_maxM(t *testing.T) {
 
 		var wg sync.WaitGroup
 		now = time.Now()
-		for i = 0; i < testFileItem; i++ {
+		for i = 0; i < testFileItemSize; i++ {
 			wg.Add(1)
 			go func(key RoseVector) {
 				defer wg.Done()
@@ -646,7 +767,7 @@ func TestExperiment2_maxM(t *testing.T) {
 		}
 		wg.Wait()
 		getTime := time.Since(now)
-		fmt.Println("m: ", m, "maxM: ", maxM, "put throughPut: ", float64(originalFileItem)/putTime.Seconds(), "get throughput: ", float64(testFileItem)/getTime.Seconds())
+		fmt.Println("m: ", m, "maxM: ", maxM, "put throughPut: ", float64(originalFileItem)/putTime.Seconds(), "get throughput: ", float64(testFileItemSize)/getTime.Seconds())
 	}
 	m = 10
 	maxM = 15
@@ -677,7 +798,7 @@ func TestExperiment2_entry_node(t *testing.T) {
 
 		var wg sync.WaitGroup
 		now = time.Now()
-		for i = 0; i < testFileItem; i++ {
+		for i = 0; i < testFileItemSize; i++ {
 			wg.Add(1)
 			go func(key RoseVector) {
 				defer wg.Done()
@@ -691,7 +812,23 @@ func TestExperiment2_entry_node(t *testing.T) {
 		}
 		wg.Wait()
 		getTime := time.Since(now)
-		fmt.Println("m: ", m, "maxM: ", maxM, "put throughPut: ", float64(originalFileItem)/putTime.Seconds(), "get throughput: ", float64(testFileItem)/getTime.Seconds())
+		fmt.Println("m: ", m, "maxM: ", maxM, "put throughPut: ", float64(originalFileItem)/putTime.Seconds(), "get throughput: ", float64(testFileItemSize)/getTime.Seconds())
 	}
 	interval = 100
+}
+
+func TestExperiment3_Delete_vector(t *testing.T) {
+	TestThroughput_Get_With_Delete_10(t)
+	TestThroughput_Get_With_Delete_50(t)
+	TestThroughput_Get_With_Delete_100(t)
+	TestThroughput_Get_With_Delete_500(t)
+	TestThroughput_Get_With_Delete_1000(t)
+}
+
+func TestExperiment3_Delete_Native(t *testing.T) {
+	TestThroughput_Get_With_Delete_Naive_10(t)
+	TestThroughput_Get_With_Delete_Naive_50(t)
+	TestThroughput_Get_With_Delete_Naive_100(t)
+	TestThroughput_Get_With_Delete_Naive_500(t)
+	TestThroughput_Get_With_Delete_Naive_1000(t)
 }
