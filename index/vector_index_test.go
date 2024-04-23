@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/rosedblabs/wal"
+	"github.com/viterin/vek/vek32"
 )
 
 func TestVectorIndex_Put_Get(t *testing.T) {
@@ -159,7 +160,7 @@ func TestThroughput_test(t *testing.T) {
 	}
 	wg.Wait()
 	getTime := time.Since(now)
-	printReport("vector_index", originalFileItem, testFileItem, putTime, getTime)
+	printThroughputReport("vector_index", originalFileItem, testFileItem, putTime, getTime)
 }
 
 var m = uint32(10)
@@ -205,7 +206,7 @@ func TestThroughput_test_10(t *testing.T) {
 	}
 	wg.Wait()
 	getTime := time.Since(now)
-	printReport("vector_index_10", originalFileItemSize, testFileItemSize, putTime, getTime)
+	printThroughputReport("vector_index_10", originalFileItemSize, testFileItemSize, putTime, getTime)
 }
 
 func TestThroughput_test_50(t *testing.T) {
@@ -245,7 +246,7 @@ func TestThroughput_test_50(t *testing.T) {
 	}
 	wg.Wait()
 	getTime := time.Since(now)
-	printReport("vector_index_50", originalFileItem, testFileItem, putTime, getTime)
+	printThroughputReport("vector_index_50", originalFileItem, testFileItem, putTime, getTime)
 }
 
 func TestThroughput_test_100(t *testing.T) {
@@ -284,7 +285,7 @@ func TestThroughput_test_100(t *testing.T) {
 	}
 	wg.Wait()
 	getTime := time.Since(now)
-	printReport("vector_index_100", originalFileItem, testFileItem, putTime, getTime)
+	printThroughputReport("vector_index_100", originalFileItem, testFileItem, putTime, getTime)
 }
 
 func TestThroughput_test_500(t *testing.T) {
@@ -323,7 +324,7 @@ func TestThroughput_test_500(t *testing.T) {
 	}
 	wg.Wait()
 	getTime := time.Since(now)
-	printReport("vector_index_500", originalFileItem, testFileItem, putTime, getTime)
+	printThroughputReport("vector_index_500", originalFileItem, testFileItem, putTime, getTime)
 }
 
 func TestThroughput_test_1000(t *testing.T) {
@@ -363,7 +364,7 @@ func TestThroughput_test_1000(t *testing.T) {
 	}
 	wg.Wait()
 	getTime := time.Since(now)
-	printReport("vector_index_1000", originalFileItem, testFileItem, putTime, getTime)
+	printThroughputReport("vector_index_1000", originalFileItem, testFileItem, putTime, getTime)
 }
 func TestThroughput_Get_With_Delete_Naive_10(t *testing.T) {
 	VectorSize := uint32(10)
@@ -407,6 +408,61 @@ func TestThroughput_Get_With_Delete_Naive_100(t *testing.T) {
 	testArr := loadVectorFromTxt("../test_files/testData/vectors_100.txt", VectorSize)
 
 	GetAndDeleteOperationNaive(vecArr, testArr, deleteFactor, VectorSize, w, vi)
+}
+
+func TestAccuracy_test_100(t *testing.T) {
+	VectorSize := uint32(100)
+	m := uint32(10)
+	maxM := uint32(15)
+	interval := uint32(500)
+	resultSize := uint32(30)
+	originalFileItem := uint32(5000)
+	testFileItem := uint32(5000)
+
+	// initiate database
+	vi := newVectorIndex(m, maxM, interval)
+	w, _ := wal.Open(wal.DefaultOptions)
+
+	// load data from txt file
+	vecArr := loadVectorFromTxt("../test_files/vectors_100.txt", VectorSize)
+	testArr := loadVectorFromTxt("../test_files/testData/vectors_100.txt", VectorSize)
+
+	// put vector into db
+	var i uint32
+	for i = 0; i < originalFileItem; i++ {
+		key := EncodeVector(vecArr[i])
+		chunkPosition, _ := w.Write(key)
+		_, err := vi.putVector(vecArr[i], &ChunkPositionWrapper{pos: chunkPosition, deleted: false})
+		if err != nil {
+			t.Fatalf("put failed: %v", err.Error())
+		}
+	}
+
+	var localMu sync.Mutex
+
+	var totalDistance float32 = 0
+	var wg sync.WaitGroup
+	for i = 0; i < testFileItem; i++ {
+		wg.Add(1)
+		go func(key RoseVector) {
+			defer wg.Done()
+			resultArr, err := vi.GetVectorTest(key, resultSize)
+			if err != nil {
+				err := fmt.Errorf("get failed: %v", err.Error())
+				fmt.Println(err.Error())
+			}
+			var avgDistance float32
+			for _, r := range resultArr {
+				avgDistance += vek32.Distance(r, key)
+			}
+
+			localMu.Lock()
+			totalDistance += avgDistance / float32(len(resultArr))
+			localMu.Unlock()
+		}(testArr[i])
+	}
+	wg.Wait()
+	printAccuracyReport("naive_knn_100", totalDistance/float32(testFileItem))
 }
 
 func TestThroughput_Get_With_Delete_Naive_500(t *testing.T) {
@@ -649,7 +705,7 @@ func loadVectorFromTxt(fileName string, VectorSize uint32) []RoseVector {
 	return vecArr
 }
 
-func printReport(filename string, originalFileItemSize uint32, testFileItemSize uint32, putTime time.Duration, getTime time.Duration) {
+func printThroughputReport(filename string, originalFileItemSize uint32, testFileItemSize uint32, putTime time.Duration, getTime time.Duration) {
 
 	fmt.Println("\n---------------------------------Here is the report ----------------------------")
 	fmt.Println("time to put all", originalFileItemSize, "items is ", putTime.Seconds(), "s")
@@ -831,4 +887,23 @@ func TestExperiment3_Delete_Native(t *testing.T) {
 	TestThroughput_Get_With_Delete_Naive_100(t)
 	TestThroughput_Get_With_Delete_Naive_500(t)
 	TestThroughput_Get_With_Delete_Naive_1000(t)
+}
+
+func printAccuracyReport(filename string, avgDistance float32) {
+
+	fmt.Println("\n---------------------------------Here is the accuracy report ----------------------------")
+	fmt.Printf("average distance %f", avgDistance)
+
+	resultsFolder := "../test_files/resultsData/"
+	resultsFilePath := resultsFolder + filename
+	file, err := os.Create(resultsFilePath)
+	if err != nil {
+		fmt.Println("Error creating file:", err)
+		return
+	}
+	defer file.Close()
+	_, err = file.WriteString(fmt.Sprintf("%f", avgDistance))
+	if err != nil {
+		fmt.Println("Error writing to file:", err)
+	}
 }
