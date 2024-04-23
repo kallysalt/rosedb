@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/rosedblabs/wal"
+	"github.com/viterin/vek/vek32"
 )
 
 func TestVectorIndex_Put_Get(t *testing.T) {
@@ -163,13 +164,14 @@ func TestThroughput_test(t *testing.T) {
 }
 
 func TestThroughput_test_10(t *testing.T) {
+	vek32.SetAcceleration(true)
 	VectorSize := uint32(10)
-	m := uint32(30)
-	maxM := uint32(50)
+	m := uint32(10)
+	maxM := uint32(20)
 	interval := uint32(100)
 	resultSize := uint32(30)
 	originalFileItem := uint32(10000)
-	testFileItem := uint32(10000)
+	testFileItem := uint32(200000)
 
 	// initiate database
 	vi := newVectorIndex(m, maxM, interval)
@@ -198,13 +200,12 @@ func TestThroughput_test_10(t *testing.T) {
 		wg.Add(1)
 		go func(key RoseVector) {
 			defer wg.Done()
-			resultArr, err := vi.GetVectorTest(key, resultSize)
+			_, err := vi.GetVectorTest(key, resultSize)
 			if err != nil {
 				err := fmt.Errorf("get failed: %v", err.Error())
 				fmt.Println(err.Error())
 			}
-			fmt.Println(resultArr)
-		}(testArr[i])
+		}(testArr[int(i)%len(testArr)])
 	}
 	wg.Wait()
 	getTime := time.Since(now)
@@ -212,13 +213,14 @@ func TestThroughput_test_10(t *testing.T) {
 }
 
 func TestThroughput_test_50(t *testing.T) {
+	vek32.SetAcceleration(true)
 	VectorSize := uint32(50)
-	m := uint32(3)
-	maxM := uint32(5)
-	interval := uint32(5)
+	m := uint32(10)
+	maxM := uint32(20)
+	interval := uint32(100)
 	resultSize := uint32(30)
 	originalFileItem := uint32(10000)
-	testFileItem := uint32(10000)
+	testFileItem := uint32(200000)
 
 	// initiate database
 	vi := newVectorIndex(m, maxM, interval)
@@ -247,13 +249,12 @@ func TestThroughput_test_50(t *testing.T) {
 		wg.Add(1)
 		go func(key RoseVector) {
 			defer wg.Done()
-			resultArr, err := vi.GetVectorTest(key, resultSize)
+			_, err := vi.GetVectorTest(key, resultSize)
 			if err != nil {
 				err := fmt.Errorf("get failed: %v", err.Error())
 				fmt.Println(err.Error())
 			}
-			fmt.Println(resultArr)
-		}(testArr[i])
+		}(testArr[int(i)%len(testArr)])
 	}
 	wg.Wait()
 	getTime := time.Since(now)
@@ -261,13 +262,14 @@ func TestThroughput_test_50(t *testing.T) {
 }
 
 func TestThroughput_test_100(t *testing.T) {
+	vek32.SetAcceleration(true)
 	VectorSize := uint32(100)
-	m := uint32(3)
-	maxM := uint32(5)
-	interval := uint32(5)
+	m := uint32(10)
+	maxM := uint32(20)
+	interval := uint32(100)
 	resultSize := uint32(30)
 	originalFileItem := uint32(10000)
-	testFileItem := uint32(10000)
+	testFileItem := uint32(200000)
 
 	// initiate database
 	vi := newVectorIndex(m, maxM, interval)
@@ -296,13 +298,12 @@ func TestThroughput_test_100(t *testing.T) {
 		wg.Add(1)
 		go func(key RoseVector) {
 			defer wg.Done()
-			resultArr, err := vi.GetVectorTest(key, resultSize)
+			_, err := vi.GetVectorTest(key, resultSize)
 			if err != nil {
 				err := fmt.Errorf("get failed: %v", err.Error())
 				fmt.Println(err.Error())
 			}
-			fmt.Println(resultArr)
-		}(testArr[i])
+		}(testArr[int(i)%len(testArr)])
 	}
 	wg.Wait()
 	getTime := time.Since(now)
@@ -310,13 +311,15 @@ func TestThroughput_test_100(t *testing.T) {
 }
 
 func TestThroughput_test_500(t *testing.T) {
+	vek32.SetAcceleration(true)
+	fmt.Println(vek32.Info())
 	VectorSize := uint32(500)
-	m := uint32(3)
-	maxM := uint32(5)
-	interval := uint32(5)
+	m := uint32(10)
+	maxM := uint32(20)
+	interval := uint32(100)
 	resultSize := uint32(30)
 	originalFileItem := uint32(10000)
-	testFileItem := uint32(10000)
+	testFileItem := uint32(200000)
 
 	// initiate database
 	vi := newVectorIndex(m, maxM, interval)
@@ -345,13 +348,12 @@ func TestThroughput_test_500(t *testing.T) {
 		wg.Add(1)
 		go func(key RoseVector) {
 			defer wg.Done()
-			resultArr, err := vi.GetVectorTest(key, resultSize)
+			_, err := vi.GetVectorTest(key, resultSize)
 			if err != nil {
 				err := fmt.Errorf("get failed: %v", err.Error())
 				fmt.Println(err.Error())
 			}
-			fmt.Println(resultArr)
-		}(testArr[i])
+		}(testArr[int(i)%len(testArr)])
 	}
 	wg.Wait()
 	getTime := time.Since(now)
@@ -359,13 +361,14 @@ func TestThroughput_test_500(t *testing.T) {
 }
 
 func TestThroughput_test_1000(t *testing.T) {
+	vek32.SetAcceleration(false)
 	VectorSize := uint32(1000)
-	m := uint32(3)
-	maxM := uint32(5)
-	interval := uint32(5)
+	m := uint32(10)
+	maxM := uint32(20)
+	interval := uint32(100)
 	resultSize := uint32(30)
 	originalFileItem := uint32(10000)
-	testFileItem := uint32(100)
+	testFileItem := uint32(200000)
 
 	// initiate database
 	vi := newVectorIndex(m, maxM, interval)
@@ -399,7 +402,7 @@ func TestThroughput_test_1000(t *testing.T) {
 				err := fmt.Errorf("get failed: %v", err.Error())
 				fmt.Println(err.Error())
 			}
-		}(testArr[i])
+		}(testArr[int(i)%len(testArr)])
 	}
 	wg.Wait()
 	getTime := time.Since(now)
